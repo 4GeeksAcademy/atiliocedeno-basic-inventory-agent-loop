@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 
 app = FastAPI()
@@ -70,6 +70,18 @@ def list_inventory():
             status_code=500,
             detail=f"El archivo de inventario contiene una fila inválida: {error}",
         ) from error
+
+
+@app.get("/inventory/alerts")
+def list_inventory_alerts(
+    threshold: float = Query(default=10, ge=0, allow_inf_nan=False),
+):
+    """Return products whose current quantity is below the alert threshold."""
+    return [
+        product
+        for product in list_inventory()
+        if product["quantity"] < threshold
+    ]
 
 
 @app.post("/inventory", status_code=status.HTTP_201_CREATED)
